@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>A Pelican Blog</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2014-07-14T10:20:00Z</updated><entry><title>Пишем игру с нуля. LibGDX. Часть 1. Введение и подготовка проекта.</title><link href="/libgdx-game-from-scratch-part1.html" rel="alternate"></link><updated>2014-07-14T10:20:00Z</updated><author><name>Bserg</name></author><id>tag:,2014-07-14:libgdx-game-from-scratch-part1.html</id><summary type="html">&lt;h3&gt;Введение&lt;/h3&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>rndSPELL | Blog</title><link href="http://blog.rndspell.com/" rel="alternate"></link><link href="http://blog.rndspell.com/feeds/all.atom.xml" rel="self"></link><id>http://blog.rndspell.com/</id><updated>2014-07-14T10:20:00+04:00</updated><entry><title>Пишем игру с нуля. LibGDX. Часть 1. Введение и подготовка проекта.</title><link href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part1/" rel="alternate"></link><updated>2014-07-14T10:20:00+04:00</updated><author><name>Bserg</name></author><id>tag:blog.rndspell.com,2014-07-14:posts/2014/07/libgdx-game-from-scratch-part1/</id><summary type="html">&lt;h3&gt;Введение&lt;/h3&gt;
 &lt;p&gt;Доброго времени суток всем читающим мой скромный блог.&lt;/p&gt;
 &lt;p&gt;Я начинающий разработчик игр, хотя и опыт программирования у меня тоже не очень большой.&lt;/p&gt;
 &lt;p&gt;Знакомство с разработкой игр я начал относительно недавно, пару лет назад. И началось оно как ни странно с библиотеки
@@ -36,7 +36,7 @@ PyCharm для Python и Django и очень доволен. Так же мож
 &lt;p&gt;После того, как все будет установлено, можно переходить к созданию проекта. Разработчики позаботились о нас,
 написав удобный &lt;a href="https://github.com/libgdx/libgdx/wiki/Project-Setup-Gradle" title="Генератор проекта"&gt;генератор&lt;/a&gt; проекта, который сделает всю остальную работу по подготовке проекта: создаст
 структуру проекта, скачает необходимые библиотеки и настроит зависимости - красота!&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Скриншот интерфейса генератора проекта" src="/images/gdx_setup_ui.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Скриншот интерфейса генератора проекта" src="http://blog.rndspell.com/images/gdx_setup_ui.png" /&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;рис.1 Интерфейс приложения gdx-setup&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;Называем наш проект, определяем наименование пакета, основного класса игры, расположение проекта и android sdk,
 жмем кнопку "Сгенерировать". После чего можно импортировать подготовленный проект в IDE (инструкция как это сделать
@@ -51,8 +51,8 @@ PyCharm для Python и Django и очень доволен. Так же мож
 &lt;li&gt;настройка рабочей директории для лаунчера десктоп версии приложения в меню &lt;em&gt;Run - Edit configuration&lt;/em&gt; для
 &lt;em&gt;Application - DesktopLauncher&lt;/em&gt; поле &lt;em&gt;Working directory&lt;/em&gt; указать путь до папки "android/assets" (Рис. 2)&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;img alt="Asset share menu" src="/images/asset_sharing_menu.png" /&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Asset share" src="/images/asset_sharing.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Asset share menu" src="http://blog.rndspell.com/images/asset_sharing_menu.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Asset share" src="http://blog.rndspell.com/images/asset_sharing.png" /&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;рис.2 Настойка папки с ресурсами игры в качестве рабочей директории для десктоп проекта&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;Вот теперь можно запустить desktop проект.&lt;/p&gt;
 &lt;p&gt;Продолжение следует...&lt;/p&gt;</summary><category term="libGDX"></category><category term="gamedev"></category></entry></feed>
