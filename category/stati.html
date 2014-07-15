@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>A Pelican Blog - Статьи</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+        <link href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="A Pelican Blog Atom Feed" />
+
+        <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">A Pelican Blog </a></h1>
+                <nav><ul>
+                    <li class="active"><a href="/category/stati.html">Статьи</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/libgdx-game-from-scratch-part1.html">Пишем игру с нуля. LibGDX. Часть 1. Введение и подготовка проекта.</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2014-07-14T10:20:00">
+                Пн. 14 Июль 2014
+        </abbr>
+
+        <address class="vcard author">
+                By <a class="url fn" href="/author/bserg.html">Bserg</a>
+        </address>
+<p>In <a href="/category/stati.html">Статьи</a>. </p>
+<p>tags: <a href="/tag/libgdx.html">libGDX</a><a href="/tag/gamedev.html">gamedev</a></p>
+</footer><!-- /.post-info --><h3>Введение</h3>
+<p>Доброго времени суток всем читающим мой скромный блог.</p>
+<p>Я начинающий разработчик игр, хотя и опыт программирования у меня тоже не очень большой.</p>
+<p>Знакомство с разработкой игр я начал относительно недавно, пару лет назад. И началось оно как ни странно с библиотеки
+<a href="http://www.pygame.org/" title="Сайт PyGame">PyGame</a>, т.к. я сам пишу на Python. Сразу скажу, что Python для создания более менее приличных игр (таких,
+которые не стыдно выложить на всеобщее обозрение) подходит с натяжкой. Но для изучения процесса игрописания подходит
+очень даже хорошо. Для начинающего разработчика не важно на чем учиться писать игру (выбирайте любимый язык,
+если только он и прямота рук позволяет добиться поставленных целей), главное это достаточная мотивация для доведения
+игры до более менее завершенного состояния.</p>
+<p>Этот блог и последующая серия статей является скорее мотивацией для меня самого.</p>
+<p>Итак. Я ставлю следующие цели:</p>
+<ul>
+<li>Написать игру в жанре jRPG (формально это именно jRPG, т.е. некое путешествие по миру игры + пошаговые "статичные" бои + сюжет)</li>
+<li>Освоить фреймворк <a href="http://libgdx.badlogicgames.com/" title="Сайт разработчиков фреймворка libGDX">libGDX</a>, соответственно писать я буду на Java, а данный фреймворк позволяет в рамках разработки
+одного проекта в итоге получить игру для основых платформ (PC, android, ios и даже html)</li>
+<li>В качестве основы архитектуры игры я буду использовать т.н. <a href="http://en.wikipedia.org/wiki/Entity_component_system" title="Entity Component System Wiki">Entity Component System</a>. Более подробно о ней я
+расскажу в последующих постах, а пока вы можете <a href="http://habrahabr.ru/post/197920/" title="Перевод статьи разработчкика ECS фреймворка на харбре">почитать вот эту статью</a>.</li>
+<li>Поскольку я не художник и не дизайнер, то проще всего рисовать игру в любимом многими pixelart (хотя мастеров
+пиксель арта поражают, что не говорит в пользу простоты жанра)</li>
+<li>Обязательно наличие музыкального сопровождения, музыка включает в себя огромную часть атмосферы игры.</li>
+<li>Сюжет будет присутствовать в каком-нибудь виде обязательно,
+но содержимое сюжета будет отражено в квестах и диалогах, которые тоже будут реализованы.</li>
+<li>Получить на выходе работоспособную заврешенную игру для платформ PC и android, и, возможно,
+для iOS (если у меня появится желание приобрести )</li>
+</ul>
+<p>Ну что же, начнем пожалуй.</p>
+<h3>Подготовка проекта</h3>
+<p>Подготовка проекта довольно проста и описана в <a href="https://github.com/libgdx/libgdx/wiki/Setting-up-your-Development-Environment-%28Eclipse%2C-Intellij-IDEA%2C-NetBeans%29" title="Настройка окружения">документации</a> на сайте разработчиков libGDX.</p>
+<p>Итак, для начала выбираем инструмент разработки. Я выбрал <a href="http://www.jetbrains.com/idea/download/" title="Скачать intelliJ IDEA">intelliJ IDEA</a> от JetBRAINS поскольку пользуюсь их IDE
+PyCharm для Python и Django и очень доволен. Так же можно использовать Eclipse. Версия Community Edition бесплатна и
+достаточна для нашей задачи.</p>
+<p>Далее нам понадобится <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html" title="Страница скачивания Java JDK">Java JDK 7</a> или выше, скачиваем и устанавливаем.</p>
+<p>Так же необходимо скачать <a href="http://developer.android.com/sdk/installing/index.html" title="Страница скачивания Android SDK">Android SDK</a> и в SDK Manager установить все платформы.</p>
+<p>Не забудьте установить переменную окружения ANDROID_HOME, значение которой будет путь до папки установки Android SDK.</p>
+<p>После того, как все будет установлено, можно переходить к созданию проекта. Разработчики позаботились о нас,
+написав удобный <a href="https://github.com/libgdx/libgdx/wiki/Project-Setup-Gradle" title="Генератор проекта">генератор</a> проекта, который сделает всю остальную работу по подготовке проекта: создаст
+структуру проекта, скачает необходимые библиотеки и настроит зависимости - красота!</p>
+<p><img alt="Скриншот интерфейса генератора проекта" src="/images/gdx_setup_ui.png" /></p>
+<p><em>рис.1 Интерфейс приложения gdx-setup</em></p>
+<p>Называем наш проект, определяем наименование пакета, основного класса игры, расположение проекта и android sdk,
+жмем кнопку "Сгенерировать". После чего можно импортировать подготовленный проект в IDE (инструкция как это сделать
+для вашей IDE будет в конце процесса генерации)</p>
+<p>Итак, запускаем intelliJ IDEA, переходим в меню <em>File - Import project</em> и выбираем файл <em>build.gradle</em> в корне нашего
+проекта. Получаем новый проект в нашей IDE, теперь можно писать игру.</p>
+<p>Но прежде сделаем еще одну вещь, по умолчанию структура проекта содержит папку "assets" с ресурсами игры (текстуры,
+звуки и прочее) в папке "android" и ее необходимо расшарить для запуска приложения на десктопе, для этого есть несколько путей:</p>
+<ul>
+<li>сделать символическую ссылку на папку "assets" в "desktop" проекте</li>
+<li>скопировать эту папку, вместо создания ссылки</li>
+<li>настройка рабочей директории для лаунчера десктоп версии приложения в меню <em>Run - Edit configuration</em> для
+<em>Application - DesktopLauncher</em> поле <em>Working directory</em> указать путь до папки "android/assets" (Рис. 2)</li>
+</ul>
+<p><img alt="Asset share menu" src="/images/asset_sharing_menu.png" /></p>
+<p><img alt="Asset share" src="/images/asset_sharing.png" /></p>
+<p><em>рис.2 Настойка папки с ресурсами игры в качестве рабочей директории для десктоп проекта</em></p>
+<p>Вот теперь можно запустить desktop проект.</p>
+<p>Продолжение следует...</p>                </article>
+            </aside><!-- /#featured -->
+            </ol><!-- /#posts-list -->
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
