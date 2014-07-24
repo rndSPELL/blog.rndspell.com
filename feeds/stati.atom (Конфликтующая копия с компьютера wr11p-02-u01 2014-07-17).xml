@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>rndSPELL | Blog</title><link href="http://blog.rndspell.com/" rel="alternate"></link><link href="http://blog.rndspell.com/feeds/stati.atom.xml" rel="self"></link><id>http://blog.rndspell.com/</id><updated>2014-07-14T10:20:00+04:00</updated><entry><title>Пишем игру с нуля. LibGDX. Часть 1. Введение и подготовка проекта.</title><link href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part1/" rel="alternate"></link><updated>2014-07-14T10:20:00+04:00</updated><author><name>Bserg</name></author><id>tag:blog.rndspell.com,2014-07-14:posts/2014/07/libgdx-game-from-scratch-part1/</id><summary type="html">&lt;h3&gt;Введение&lt;/h3&gt;
+&lt;p&gt;Доброго времени суток всем читающим мой скромный блог.&lt;/p&gt;
+&lt;p&gt;Я начинающий разработчик игр, хотя и опыт программирования у меня тоже не очень большой.&lt;/p&gt;
+&lt;p&gt;Знакомство с разработкой игр я начал относительно недавно, пару лет назад. И началось оно как ни странно с библиотеки
+&lt;a href="http://www.pygame.org/" title="Сайт PyGame"&gt;PyGame&lt;/a&gt;, т.к. я сам пишу на Python. Сразу скажу, что Python для создания более менее приличных игр (таких,
+которые не стыдно выложить на всеобщее обозрение) подходит с натяжкой. Но для изучения процесса игрописания подходит
+очень даже хорошо. Для начинающего разработчика не важно на чем учиться писать игру (выбирайте любимый язык,
+если только он и прямота рук позволяет добиться поставленных целей), главное это достаточная мотивация для доведения
+игры до более менее завершенного состояния.&lt;/p&gt;
+&lt;p&gt;Этот блог и последующая серия статей является скорее мотивацией для меня самого.&lt;/p&gt;
+&lt;p&gt;Итак. Я ставлю следующие цели:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Написать игру в жанре jRPG (формально это именно jRPG, т.е. некое путешествие по миру игры + пошаговые "статичные" бои + сюжет)&lt;/li&gt;
+&lt;li&gt;Освоить фреймворк &lt;a href="http://libgdx.badlogicgames.com/" title="Сайт разработчиков фреймворка libGDX"&gt;libGDX&lt;/a&gt;, соответственно писать я буду на Java, а данный фреймворк позволяет в рамках разработки
+одного проекта в итоге получить игру для основых платформ (PC, android, ios и даже html)&lt;/li&gt;
+&lt;li&gt;В качестве основы архитектуры игры я буду использовать т.н. &lt;a href="http://en.wikipedia.org/wiki/Entity_component_system" title="Entity Component System Wiki"&gt;Entity Component System&lt;/a&gt;. Более подробно о ней я
+расскажу в последующих постах, а пока вы можете &lt;a href="http://habrahabr.ru/post/197920/" title="Перевод статьи разработчкика ECS фреймворка на харбре"&gt;почитать вот эту статью&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Поскольку я не художник и не дизайнер, то проще всего рисовать игру в любимом многими pixelart (хотя мастеров
+пиксель арта поражают, что не говорит в пользу простоты жанра)&lt;/li&gt;
+&lt;li&gt;Обязательно наличие музыкального сопровождения, музыка включает в себя огромную часть атмосферы игры.&lt;/li&gt;
+&lt;li&gt;Сюжет будет присутствовать в каком-нибудь виде обязательно,
+но содержимое сюжета будет отражено в квестах и диалогах, которые тоже будут реализованы.&lt;/li&gt;
+&lt;li&gt;Получить на выходе работоспособную заврешенную игру для платформ PC и android, и, возможно,
+для iOS (если у меня появится желание приобрести )&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Ну что же, начнем пожалуй.&lt;/p&gt;
+&lt;h3&gt;Подготовка проекта&lt;/h3&gt;
+&lt;p&gt;Подготовка проекта довольно проста и описана в &lt;a href="https://github.com/libgdx/libgdx/wiki/Setting-up-your-Development-Environment-%28Eclipse%2C-Intellij-IDEA%2C-NetBeans%29" title="Настройка окружения"&gt;документации&lt;/a&gt; на сайте разработчиков libGDX.&lt;/p&gt;
+&lt;p&gt;Итак, для начала выбираем инструмент разработки. Я выбрал &lt;a href="http://www.jetbrains.com/idea/download/" title="Скачать intelliJ IDEA"&gt;intelliJ IDEA&lt;/a&gt; от JetBRAINS поскольку пользуюсь их IDE
+PyCharm для Python и Django и очень доволен. Так же можно использовать Eclipse. Версия Community Edition бесплатна и
+достаточна для нашей задачи.&lt;/p&gt;
+&lt;p&gt;Далее нам понадобится &lt;a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html" title="Страница скачивания Java JDK"&gt;Java JDK 7&lt;/a&gt; или выше, скачиваем и устанавливаем.&lt;/p&gt;
+&lt;p&gt;Так же необходимо скачать &lt;a href="http://developer.android.com/sdk/installing/index.html" title="Страница скачивания Android SDK"&gt;Android SDK&lt;/a&gt; и в SDK Manager установить все платформы.&lt;/p&gt;
+&lt;p&gt;Не забудьте установить переменную окружения ANDROID_HOME, значение которой будет путь до папки установки Android SDK.&lt;/p&gt;
+&lt;p&gt;После того, как все будет установлено, можно переходить к созданию проекта. Разработчики позаботились о нас,
+написав удобный &lt;a href="https://github.com/libgdx/libgdx/wiki/Project-Setup-Gradle" title="Генератор проекта"&gt;генератор&lt;/a&gt; проекта, который сделает всю остальную работу по подготовке проекта: создаст
+структуру проекта, скачает необходимые библиотеки и настроит зависимости - красота!&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Скриншот интерфейса генератора проекта" src="http://blog.rndspell.com/images/gdx_setup_ui.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;рис.1 Интерфейс приложения gdx-setup&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Называем наш проект, определяем наименование пакета, основного класса игры, расположение проекта и android sdk,
+жмем кнопку "Сгенерировать". После чего можно импортировать подготовленный проект в IDE (инструкция как это сделать
+для вашей IDE будет в конце процесса генерации)&lt;/p&gt;
+&lt;p&gt;Итак, запускаем intelliJ IDEA, переходим в меню &lt;em&gt;File - Import project&lt;/em&gt; и выбираем файл &lt;em&gt;build.gradle&lt;/em&gt; в корне нашего
+проекта. Получаем новый проект в нашей IDE, теперь можно писать игру.&lt;/p&gt;
+&lt;p&gt;Но прежде сделаем еще одну вещь, по умолчанию структура проекта содержит папку "assets" с ресурсами игры (текстуры,
+звуки и прочее) в папке "android" и ее необходимо расшарить для запуска приложения на десктопе, для этого есть несколько путей:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;сделать символическую ссылку на папку "assets" в "desktop" проекте&lt;/li&gt;
+&lt;li&gt;скопировать эту папку, вместо создания ссылки&lt;/li&gt;
+&lt;li&gt;настройка рабочей директории для лаунчера десктоп версии приложения в меню &lt;em&gt;Run - Edit configuration&lt;/em&gt; для
+&lt;em&gt;Application - DesktopLauncher&lt;/em&gt; поле &lt;em&gt;Working directory&lt;/em&gt; указать путь до папки "android/assets" (Рис. 2)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img alt="Asset share menu" src="http://blog.rndspell.com/images/asset_sharing_menu.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Asset share" src="http://blog.rndspell.com/images/asset_sharing.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;рис.2 Настойка папки с ресурсами игры в качестве рабочей директории для десктоп проекта&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Вот теперь можно запустить desktop проект.&lt;/p&gt;
+&lt;p&gt;Продолжение следует...&lt;/p&gt;</summary><category term="libGDX"></category><category term="gamedev"></category></entry></feed>
