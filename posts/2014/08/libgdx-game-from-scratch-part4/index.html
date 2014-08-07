@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:og="http://ogp.me/ns#"
+      xmlns:fb="https://www.facebook.com/2008/fbml">
+<head>
+    <title>Пишем игру с нуля. LibGDX. Часть 4. Коллизии, воздействие сил на объекты. Управление. - rndSPELL | Blog</title>
+    <!-- Using the latest rendering mode for IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link href="http://blog.rndspell.com/images/favicon.png" rel="icon">
+
+
+    <!-- Open Graph tags -->
+        <meta property="og:site_name" content="rndSPELL | Blog" />
+            <meta property="og:type" content="article"/>
+            <meta property="og:title" content="Пишем игру с нуля. LibGDX. Часть 4. Коллизии, воздействие сил на объекты. Управление."/>
+            <meta property="og:url" content="http://blog.rndspell.com/posts/2014/08/libgdx-game-from-scratch-part4/"/>
+            <meta property="og:description" content="В данной статье я расскажу о системе коллизий, воздействии сил на игровой объект (гравитация, трение и т.п.) в рамках Компонентной системы сущностей, а так же об реализации управления движения объектом."/>
+            <meta property="article:published_time" content="2014-08-07" />
+                <meta property="article:section" content="Статьи" />
+                <meta property="article:tag" content="gamedev" />
+                <meta property="article:tag" content="libGDX" />
+                <meta property="article:tag" content="ECS" />
+                <meta property="article:author" content="Bserg" />
+
+
+    <!-- Bootstrap -->
+        <link rel="stylesheet" href="http://blog.rndspell.com/theme/css/bootstrap.min.css" type="text/css"/>
+    <link href="http://blog.rndspell.com/theme/css/font-awesome.min.css" rel="stylesheet">
+
+    <link href="http://blog.rndspell.com/theme/css/pygments/native.css" rel="stylesheet">
+    <link rel="stylesheet" href="http://blog.rndspell.com/theme/css/style.css" type="text/css"/>
+
+        <link href="http://blog.rndspell.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
+              title="rndSPELL | Blog ATOM Feed"/>
+
+</head>
+<body>
+
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="http://blog.rndspell.com/" class="navbar-brand">
+<img src="http://blog.rndspell.com/images/logo.png" width="20"/> rndSPELL | Blog            </a>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                        <li class="active">
+                            <a href="http://blog.rndspell.com/category/stati">Статьи</a>
+                        </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="http://blog.rndspell.com/archives.html"><i class="fa fa-th-list"></i><span class="icon-label">Архив</span></a></li>
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+</div> <!-- /.navbar -->
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9">
+
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="http://blog.rndspell.com/posts/2014/08/libgdx-game-from-scratch-part4/"
+                       rel="bookmark"
+                       title="Permalink to Пишем игру с нуля. LibGDX. Часть 4. Коллизии, воздействие сил на объекты. Управление.">
+                        Пишем игру с нуля. LibGDX. Часть 4. Коллизии, воздействие сил на объекты. Управление.
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <div class="panel">
+                    <div class="panel-body">
+<footer class="post-info">
+    <span class="label label-default">Дата</span>
+    <span class="published">
+        <i class="fa fa-calendar"></i><time datetime="2014-08-07T10:00:00"> Чт. 07 Август 2014</time>
+    </span>
+
+
+
+<span class="label label-default">Тэги</span>
+	<a href="http://blog.rndspell.com/tag/gamedev/">gamedev</a>
+        /
+	<a href="http://blog.rndspell.com/tag/libgdx/">libGDX</a>
+        /
+	<a href="http://blog.rndspell.com/tag/ecs/">ECS</a>
+    
+</footer><!-- /.post-info -->                    </div>
+                </div>
+                <p>Предыдущие статьи: <a href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part1/">часть1</a>, <a href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part2/">часть2</a>, <a href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part3/">часть3</a></p>
+<p>В моей игре будет два основных режима: приключение (беготня по игровому миру) и битвы (пошаговые бои, как в большинстве японских рпг).
+В первом режиме игра будет представлять собой 2d платформер, т.е вид сбоку, управление движением кнопками на клавиатуре, а в случае мобильной версии - экранными кнопками.
+Платформер должен иметь хоть простейшую, но физику (система коллизий, гравитация и т.д.).
+Попробую все это реализовать.</p>
+<h3>Управление</h3>
+<p>В этой статье рассмотрим только управление с клавиатуры, управление для мобильной версии будет рассмотрено в будущем.</p>
+<p>Во фреймворке libGDX управление клавиатурой/мышью/тачскрином реализуется через интерфейс <em>InputProcessor</em>, имеющий следущие методы:</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyInputProcessor</span> <span class="kd">implements</span> <span class="n">InputProcessor</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">keyDown</span> <span class="o">(</span><span class="kt">int</span> <span class="n">keycode</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">keyUp</span> <span class="o">(</span><span class="kt">int</span> <span class="n">keycode</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">keyTyped</span> <span class="o">(</span><span class="kt">char</span> <span class="n">character</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">touchDown</span> <span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">,</span> <span class="kt">int</span> <span class="n">pointer</span><span class="o">,</span> <span class="kt">int</span> <span class="n">button</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">touchUp</span> <span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">,</span> <span class="kt">int</span> <span class="n">pointer</span><span class="o">,</span> <span class="kt">int</span> <span class="n">button</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">touchDragged</span> <span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">,</span> <span class="kt">int</span> <span class="n">pointer</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">mouseMoved</span> <span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">scrolled</span> <span class="o">(</span><span class="kt">int</span> <span class="n">amount</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Из наименования метода ясно за что он отвечает.
+<em>keyDown</em> вызывается при нажатии кнопки на клавиатуре, <em>int keyCode</em> передает код нажатой клавиши.
+<em>keyUp</em> вызывается при отпускании клавиши с кодом <em>int keyCode</em>.
+<em>keyTyped</em> вызывается при набивании символа в юникоде на клавиатуре, его можно использовать для ввода текста в игре.
+<em>touchDown</em> вызывается при прикасании к сенсорному экрану мобильного устройства или клике указателем мыши по экрану в положении <em>x, y</em>, при этом <em>int button</em> указывает какая кнопка мыши была нажата (с случае сенсорного экрана всегда будет <em>Buttons.LEFT</em>).
+<em>touchUp</em> соответственно при отрыве пальца от экрана или отпускании кнопки мыши.
+<em>touchDragged</em> вызывается при движении мыши с зажатой кнопкой либо скольжении пальцем по экрану мобильного устройства.
+<em>mouseMoved</em> при движении указателя мыши по экрану
+<em>scrolled</em> вызывается только при прокрутке колесом мыши.</p>
+<p>Для управления прежде всего добавим новый компонент:</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">InputControlComponent</span> <span class="kd">extends</span> <span class="n">Component</span> <span class="kd">implements</span> <span class="n">Json</span><span class="o">.</span><span class="na">Serializable</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">controllable</span><span class="o">;</span>
+    <span class="c1">//указывает на возможность управлять объектом</span>
+
+    <span class="kd">public</span> <span class="nf">InputControlComponent</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">controllable</span><span class="o">){</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">controllable</span> <span class="o">=</span> <span class="n">controllable</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">(</span><span class="n">Json</span> <span class="n">json</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">read</span><span class="o">(</span><span class="n">Json</span> <span class="n">json</span><span class="o">,</span> <span class="n">JsonValue</span> <span class="n">jsonData</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">json</span><span class="o">.</span><span class="na">readField</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="s">&quot;controllable&quot;</span><span class="o">,</span> <span class="n">jsonData</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Этот компонент необходимо будет добавить к главному персонажу и всем другим объектам, которые, возможно, будут управляться с клавиатуры/мыши/сенсорного экрана.</p>
+<p>Теперь можно вводить систему управления:</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">InputSystem</span> <span class="kd">extends</span> <span class="n">IteratingSystem</span> <span class="kd">implements</span> <span class="n">InputProcessor</span> <span class="o">{</span>
+
+    <span class="c1">//система реализует интерфейс inputProcessor</span>
+
+    <span class="kd">private</span> <span class="n">InputControlComponent</span> <span class="n">inputControl</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">MovementComponent</span> <span class="n">movement</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">enum</span> <span class="n">Keys</span><span class="o">{</span> <span class="n">LEFT</span><span class="o">,</span> <span class="n">RIGHT</span><span class="o">,</span> <span class="n">UP</span><span class="o">,</span> <span class="n">DOWN</span> <span class="o">}</span>
+    <span class="kd">private</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Keys</span><span class="o">,</span> <span class="n">Boolean</span><span class="o">&gt;</span> <span class="n">keys</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Keys</span><span class="o">,</span> <span class="n">Boolean</span><span class="o">&gt;();</span>
+
+    <span class="kd">public</span> <span class="nf">InputSystem</span><span class="o">(){</span>
+        <span class="c1">//отбираем список объектов, движением которым можно управлять, а так же задаем начальные значения словаря keys</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">Family</span><span class="o">.</span><span class="na">getFamilyFor</span><span class="o">(</span><span class="n">InputControlComponent</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">));</span>
+        <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">LEFT</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+        <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">RIGHT</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+        <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">UP</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+        <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">DOWN</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">processEntity</span><span class="o">(</span><span class="n">Entity</span> <span class="n">entity</span><span class="o">,</span> <span class="kt">float</span> <span class="n">deltaTime</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">inputControl</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">InputControlComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="n">movement</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="c1">//получили необходимые компоненты объекта</span>
+        <span class="k">if</span><span class="o">(</span><span class="n">inputControl</span><span class="o">.</span><span class="na">isControllable</span><span class="o">())</span> <span class="o">{</span>
+            <span class="c1">//проверяем, возможно ли управлять объектом</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">LEFT</span><span class="o">)){</span>
+                <span class="n">movement</span><span class="o">.</span><span class="na">getAcceleration</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+                <span class="c1">//задаем направление ускорения объекта</span>
+            <span class="o">}</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">RIGHT</span><span class="o">)){</span>
+                <span class="n">movement</span><span class="o">.</span><span class="na">getAcceleration</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>
+            <span class="o">}</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">UP</span><span class="o">)){</span>
+                <span class="n">movement</span><span class="o">.</span><span class="na">getAcceleration</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>
+            <span class="o">}</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">DOWN</span><span class="o">)){</span>
+                <span class="n">movement</span><span class="o">.</span><span class="na">getAcceleration</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+            <span class="o">}</span>
+            <span class="k">if</span><span class="o">((!</span><span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">LEFT</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">RIGHT</span><span class="o">))</span> <span class="o">||</span> <span class="o">(</span><span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">LEFT</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">RIGHT</span><span class="o">))){</span>
+                <span class="n">movement</span><span class="o">.</span><span class="na">getAcceleration</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                <span class="c1">//в случае, когда кнопки &quot;влево&quot; и &quot;вправо&quot; нажаты одновременно или не нажаты обе, обнуляем x составляющую ускорения</span>
+            <span class="o">}</span>
+            <span class="k">if</span><span class="o">((!</span><span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">UP</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">DOWN</span><span class="o">))</span> <span class="o">||</span> <span class="o">(</span><span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">UP</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="n">keys</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">DOWN</span><span class="o">))){</span>
+                <span class="n">movement</span><span class="o">.</span><span class="na">getAcceleration</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                <span class="c1">//аналогично проверяем &quot;вверх&quot; и &quot;вниз&quot;</span>
+            <span class="o">}</span>
+            <span class="n">movement</span><span class="o">.</span><span class="na">getAcceleration</span><span class="o">().</span><span class="na">nor</span><span class="o">().</span><span class="na">scl</span><span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getAccelerationValue</span><span class="o">());</span>
+            <span class="c1">//нормализуем вектор ускорения и задаем ему значение ускорения, указанное в поле accelerationValue компонента движения</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">keyDown</span><span class="o">(</span><span class="kt">int</span> <span class="n">keycode</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">//получаем нажатые клавиши и выставляем соответствующие члены словаря keys</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">keycode</span><span class="o">){</span>
+            <span class="k">case</span> <span class="n">Input</span><span class="o">.</span><span class="na">Keys</span><span class="o">.</span><span class="na">LEFT</span><span class="o">:</span>
+                <span class="c1">//нажата кнопка &quot;влево&quot;</span>
+                <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">LEFT</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="n">Input</span><span class="o">.</span><span class="na">Keys</span><span class="o">.</span><span class="na">RIGHT</span><span class="o">:</span>
+                <span class="c1">//нажата кнопка &quot;вправо&quot;</span>
+                <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">RIGHT</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="n">Input</span><span class="o">.</span><span class="na">Keys</span><span class="o">.</span><span class="na">UP</span><span class="o">:</span>
+                <span class="c1">//нажата кнопка &quot;вверх&quot;</span>
+                <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">UP</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="n">Input</span><span class="o">.</span><span class="na">Keys</span><span class="o">.</span><span class="na">DOWN</span><span class="o">:</span>
+                <span class="c1">//нажата кнопка &quot;вниз&quot;</span>
+                <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">DOWN</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+                <span class="k">break</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">keyUp</span><span class="o">(</span><span class="kt">int</span> <span class="n">keycode</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">//при отпускании клавиши необходимо установить соответствующие члены словаря keys</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">keycode</span><span class="o">){</span>
+            <span class="k">case</span> <span class="n">Input</span><span class="o">.</span><span class="na">Keys</span><span class="o">.</span><span class="na">LEFT</span><span class="o">:</span>
+                <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">LEFT</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="n">Input</span><span class="o">.</span><span class="na">Keys</span><span class="o">.</span><span class="na">RIGHT</span><span class="o">:</span>
+                <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">RIGHT</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="n">Input</span><span class="o">.</span><span class="na">Keys</span><span class="o">.</span><span class="na">UP</span><span class="o">:</span>
+                <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">UP</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="n">Input</span><span class="o">.</span><span class="na">Keys</span><span class="o">.</span><span class="na">DOWN</span><span class="o">:</span>
+                <span class="n">keys</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">Keys</span><span class="o">.</span><span class="na">DOWN</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+                <span class="k">break</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="o">...</span>
+    <span class="c1">//опустим неперегруженные методы</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>В данной системе мы просто задаем вектор ускорения в компоненте <em>MovementComponent</em> объектов, а система <em>MovementSystem</em> уже самостоятельно обновит положение объекта в игровом мире.</p>
+<p>Для того, чтобы наша система работала, необходимо сообщить фреймворку, что необходимо вызывать ее методы при приеме событий устройств ввода:</p>
+<div class="highlight"><pre><span class="n">Gdx</span><span class="o">.</span><span class="na">input</span><span class="o">.</span><span class="na">setInputProcessor</span><span class="o">(</span><span class="k">new</span> <span class="n">InputSystem</span><span class="o">());</span>
+</pre></div>
+
+
+<p>В <em>GameScreen</em> добавим новую систему и зададим компоненты для объектов:</p>
+<div class="highlight"><pre><span class="o">...</span>
+
+<span class="nd">@Override</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">show</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">camera</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OrthographicCamera</span><span class="o">(</span><span class="mi">640</span><span class="o">,</span> <span class="mi">480</span><span class="o">);</span>
+    <span class="n">camera</span><span class="o">.</span><span class="na">position</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="mi">256</span><span class="o">,</span> <span class="mi">256</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Engine</span><span class="o">();</span>
+
+    <span class="n">engine</span><span class="o">.</span><span class="na">addSystem</span><span class="o">(</span><span class="k">new</span> <span class="n">MovementSystem</span><span class="o">());</span>
+    <span class="n">engine</span><span class="o">.</span><span class="na">addSystem</span><span class="o">(</span><span class="k">new</span> <span class="n">BoundsSystem</span><span class="o">());</span>
+    <span class="n">engine</span><span class="o">.</span><span class="na">addSystem</span><span class="o">(</span><span class="k">new</span> <span class="n">RenderSystem</span><span class="o">(</span><span class="n">camera</span><span class="o">));</span>
+    <span class="n">engine</span><span class="o">.</span><span class="na">addSystem</span><span class="o">(</span><span class="n">renderBoundsSystem</span><span class="o">);</span>
+
+    <span class="n">InputSystem</span> <span class="n">inputSystem</span> <span class="o">=</span> <span class="k">new</span> <span class="n">InputSystem</span><span class="o">();</span>
+    <span class="n">engine</span><span class="o">.</span><span class="na">addSystem</span><span class="o">(</span><span class="n">inputSystem</span><span class="o">);</span>
+    <span class="c1">//добавляем систему</span>
+
+    <span class="n">Entity</span> <span class="n">player</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Entity</span><span class="o">();</span>
+    <span class="n">player</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">PositionComponent</span><span class="o">(</span><span class="k">new</span> <span class="n">Vector2</span><span class="o">(-</span><span class="mi">32</span><span class="o">,</span> <span class="mi">128</span><span class="o">)));</span>
+    <span class="n">player</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">MovementComponent</span><span class="o">(</span><span class="mi">256</span><span class="n">f</span><span class="o">,</span> <span class="mi">256</span><span class="n">f</span><span class="o">));</span>
+    <span class="n">player</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">RenderComponent</span><span class="o">(</span><span class="n">GameAssetManager</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;textures/textures.atlas&quot;</span><span class="o">,</span> <span class="n">TextureAtlas</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">findRegion</span><span class="o">(</span><span class="s">&quot;null&quot;</span><span class="o">),</span> <span class="mi">64</span><span class="o">,</span> <span class="mi">64</span><span class="o">,</span> <span class="k">new</span> <span class="n">Vector2</span><span class="o">(-</span><span class="mi">32</span><span class="o">,</span> <span class="o">-</span><span class="mi">32</span><span class="o">)));</span>
+    <span class="n">player</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">InputControlComponent</span><span class="o">(</span><span class="kc">true</span><span class="o">));</span>
+    <span class="c1">//добавляем новый компонент</span>
+
+    <span class="n">engine</span><span class="o">.</span><span class="na">addEntity</span><span class="o">(</span><span class="n">player</span><span class="o">);</span>
+
+    <span class="n">Entity</span> <span class="n">entity</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Entity</span><span class="o">();</span>
+    <span class="n">entity</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">PositionComponent</span><span class="o">(</span><span class="k">new</span> <span class="n">Vector2</span><span class="o">(</span><span class="mi">256</span><span class="o">,</span> <span class="mi">256</span><span class="o">)));</span>
+    <span class="n">entity</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">BoundsComponent</span><span class="o">(</span><span class="mi">64</span><span class="n">f</span><span class="o">,</span> <span class="mi">64</span><span class="n">f</span><span class="o">,</span> <span class="k">new</span> <span class="n">Vector2</span><span class="o">(-</span><span class="mi">32</span><span class="n">f</span><span class="o">,</span> <span class="o">-</span><span class="mi">32</span><span class="n">f</span><span class="o">),</span> <span class="kc">false</span><span class="o">));</span>
+    <span class="n">entity</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">RenderComponent</span><span class="o">(</span><span class="n">GameAssetManager</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;textures/textures.atlas&quot;</span><span class="o">,</span> <span class="n">TextureAtlas</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">findRegion</span><span class="o">(</span><span class="s">&quot;null&quot;</span><span class="o">),</span> <span class="mi">64</span><span class="o">,</span> <span class="mi">64</span><span class="o">,</span> <span class="k">new</span> <span class="n">Vector2</span><span class="o">(-</span><span class="mi">32</span><span class="o">,</span> <span class="o">-</span><span class="mi">32</span><span class="o">)));</span>
+    <span class="n">engine</span><span class="o">.</span><span class="na">addEntity</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+
+    <span class="n">Gdx</span><span class="o">.</span><span class="na">input</span><span class="o">.</span><span class="na">setInputProcessor</span><span class="o">(</span><span class="n">inputSystem</span><span class="o">);</span>
+    <span class="c1">//сообщаем libGDX использовать нашу систему управления для реализации событий устройств ввода</span>
+<span class="o">}</span>
+
+<span class="o">...</span>
+</pre></div>
+
+
+<p>Запустим приложение.</p>
+<p><img alt="проверка работы системы управления" src="http://blog.rndspell.com/images/input_test.gif" title="Проверка работы системы управления" /></p>
+<p><em>рис.1 Работа системы управления. Управление с клавиатуры</em></p>
+<p>Кстати, можно наглядно оценить возможности компонентной системы сущностей. Легким движением руки дадим возможность неодвижному объекту так же двигаться и принимать управление с клавиатуры:</p>
+<div class="highlight"><pre><span class="o">...</span>
+
+<span class="n">Entity</span> <span class="n">entity</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Entity</span><span class="o">();</span>
+<span class="n">entity</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">PositionComponent</span><span class="o">(</span><span class="k">new</span> <span class="n">Vector2</span><span class="o">(</span><span class="mi">256</span><span class="o">,</span> <span class="mi">256</span><span class="o">)));</span>
+<span class="n">entity</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">MovementComponent</span><span class="o">(</span><span class="mi">128</span><span class="n">f</span><span class="o">,</span> <span class="mi">128</span><span class="n">f</span><span class="o">));</span>
+<span class="c1">//добавляем компонент движения и указываем другие параметры ускорения и максимальной скорости</span>
+<span class="n">entity</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">BoundsComponent</span><span class="o">(</span><span class="mi">64</span><span class="n">f</span><span class="o">,</span> <span class="mi">64</span><span class="n">f</span><span class="o">,</span> <span class="k">new</span> <span class="n">Vector2</span><span class="o">(-</span><span class="mi">32</span><span class="n">f</span><span class="o">,</span> <span class="o">-</span><span class="mi">32</span><span class="n">f</span><span class="o">),</span> <span class="kc">false</span><span class="o">));</span>
+<span class="n">entity</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">InputControlComponent</span><span class="o">(</span><span class="kc">true</span><span class="o">));</span>
+<span class="c1">//добавляем компонент управления и указываем, что он может управляться</span>
+<span class="n">entity</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">RenderComponent</span><span class="o">(</span><span class="n">GameAssetManager</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;textures/textures.atlas&quot;</span><span class="o">,</span> <span class="n">TextureAtlas</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">findRegion</span><span class="o">(</span><span class="s">&quot;null&quot;</span><span class="o">),</span> <span class="mi">64</span><span class="o">,</span> <span class="mi">64</span><span class="o">,</span> <span class="k">new</span> <span class="n">Vector2</span><span class="o">(-</span><span class="mi">32</span><span class="o">,</span> <span class="o">-</span><span class="mi">32</span><span class="o">)));</span>
+<span class="n">engine</span><span class="o">.</span><span class="na">addEntity</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+
+<span class="o">...</span>
+</pre></div>
+
+
+<p>Вот так просто.</p>
+<p><img alt="проверка работы системы управления" src="http://blog.rndspell.com/images/input_test1.gif" title="Проверка работы системы управления" /></p>
+<p><em>рис.2 Работа системы управления. Несколько контролируемых объектов</em></p>
+<h3>Коллизии</h3>
+<p>Коллизии в 2d игре обычно реализуются следующим образом. Каждый объект, участвующий в коллизиях, имеет некий бокс (окружность), границы которого определяют границы самого объекта в игровом мире. Этот бокс может совпадать с текстурой, а может и нет.
+В качестве такого бокса для упрощения и снижения стоимости расчета используют простые геометрические фигуры: прямоугольник, окружность, треугольник - наиболее близко повторяющий форму объекта. Я буду использовать прямоугольники для составных блоков поверхностей и персонажей.
+Далее расчет коллизий производится путем перебора объектов, для каждого из которых проверяется пересечение его бокса с боксами других объектов, если пересечение имеет место быть, то фиксируется коллизия (в нашем случае будет использоваться система сигналов) и производится необходимое действие (например измененеие вектора скорости, уничтожение игрового объекта и т.п.)</p>
+<p>Добавим компонент, добавляющий объекту габаритный контейнер:</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BoundsComponent</span> <span class="kd">extends</span> <span class="n">Component</span> <span class="kd">implements</span> <span class="n">Json</span><span class="o">.</span><span class="na">Serializable</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">Rectangle</span> <span class="n">bounds</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Rectangle</span><span class="o">();</span>
+    <span class="c1">//прямоугольник, обозначающий габариты объекта при расчете коллизий</span>
+    <span class="kd">private</span> <span class="n">Vector2</span> <span class="n">boundsOffset</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Vector2</span><span class="o">();</span>
+    <span class="c1">//смещение относительно положения объекта в игровом мире</span>
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">passable</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="c1">//возможность проходить другим объектам сквозь этот объект</span>
+
+    <span class="kd">public</span> <span class="nf">BoundsComponent</span><span class="o">(</span><span class="kt">float</span> <span class="n">width</span><span class="o">,</span> <span class="kt">float</span> <span class="n">height</span><span class="o">,</span> <span class="n">Vector2</span> <span class="n">boundsOffset</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">passable</span><span class="o">){</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">bounds</span><span class="o">.</span><span class="na">setSize</span><span class="o">(</span><span class="n">width</span><span class="o">,</span> <span class="n">height</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">boundsOffset</span> <span class="o">=</span> <span class="n">boundsOffset</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">passable</span> <span class="o">=</span> <span class="n">passable</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">(</span><span class="n">Json</span> <span class="n">json</span><span class="o">)</span> <span class="o">{}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">read</span><span class="o">(</span><span class="n">Json</span> <span class="n">json</span><span class="o">,</span> <span class="n">JsonValue</span> <span class="n">jsonData</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">JsonValue</span> <span class="n">boundsData</span> <span class="o">=</span> <span class="n">jsonData</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;bounds&quot;</span><span class="o">);</span>
+        <span class="kt">float</span> <span class="n">width</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="na">readValue</span><span class="o">(</span><span class="s">&quot;width&quot;</span><span class="o">,</span> <span class="kt">float</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">boundsData</span><span class="o">);</span>
+        <span class="kt">float</span> <span class="n">height</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="na">readValue</span><span class="o">(</span><span class="s">&quot;height&quot;</span><span class="o">,</span> <span class="kt">float</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">boundsData</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">bounds</span><span class="o">.</span><span class="na">setSize</span><span class="o">(</span><span class="n">width</span><span class="o">,</span> <span class="n">height</span><span class="o">);</span>
+        <span class="n">json</span><span class="o">.</span><span class="na">readField</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="s">&quot;boundsOffset&quot;</span><span class="o">,</span> <span class="n">jsonData</span><span class="o">);</span>
+        <span class="n">json</span><span class="o">.</span><span class="na">readField</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="s">&quot;passable&quot;</span><span class="o">,</span> <span class="n">jsonData</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Теперь необходима система, обновляющая габаритные контейнеры объектов с компонентом <em>BoundsComponent</em>. Здесь все довольно просто:</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BoundsSystem</span> <span class="kd">extends</span> <span class="n">IteratingSystem</span> <span class="o">{</span>
+
+    <span class="n">BoundsComponent</span> <span class="n">bounds</span><span class="o">;</span>
+    <span class="n">PositionComponent</span> <span class="n">position</span><span class="o">;</span>
+    <span class="n">MovementComponent</span> <span class="n">movement</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">BoundsSystem</span><span class="o">(){</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">Family</span><span class="o">.</span><span class="na">getFamilyFor</span><span class="o">(</span><span class="n">BoundsComponent</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">PositionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">));</span>
+        <span class="c1">//ограничиваем список объектов, участвующих в коллизиях</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">processEntity</span><span class="o">(</span><span class="n">Entity</span> <span class="n">entity</span><span class="o">,</span> <span class="kt">float</span> <span class="n">deltaTime</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">BoundsComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">PositionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+        <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setPosition</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">cpy</span><span class="o">().</span><span class="na">add</span><span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">()));</span>
+        <span class="c1">//устанавливаем положение габаритного контейнера в соответствии с положением объекта и величины смещения относительно этого положения</span>
+
+        <span class="k">if</span><span class="o">(</span><span class="n">entity</span><span class="o">.</span><span class="na">hasComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">)){</span>
+            <span class="n">movement</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+            <span class="n">Vector2</span> <span class="n">boundsPosition</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Vector2</span><span class="o">();</span>
+            <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getPosition</span><span class="o">(</span><span class="n">boundsPosition</span><span class="o">).</span><span class="na">add</span><span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">cpy</span><span class="o">().</span><span class="na">scl</span><span class="o">(</span><span class="n">deltaTime</span><span class="o">));</span>
+            <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setPosition</span><span class="o">(</span><span class="n">boundsPosition</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Рассмотрим подробнее вот эту часть системы обновления габаритных контейнеров:</p>
+<div class="highlight"><pre><span class="k">if</span><span class="o">(</span><span class="n">entity</span><span class="o">.</span><span class="na">hasComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">)){</span>
+    <span class="n">movement</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+    <span class="n">Vector2</span> <span class="n">boundsPosition</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Vector2</span><span class="o">();</span>
+    <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getPosition</span><span class="o">(</span><span class="n">boundsPosition</span><span class="o">).</span><span class="na">add</span><span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">cpy</span><span class="o">().</span><span class="na">scl</span><span class="o">(</span><span class="n">deltaTime</span><span class="o">));</span>
+    <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setPosition</span><span class="o">(</span><span class="n">boundsPosition</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Если объект имеет возможность двигаться в игровом мире, т.е. имеет компонент <em>MovementComponent</em>, то в этом случае габаритный контейнер должен двигаться вместе с объектом.
+Допустим объект двигается с определенной скоростью и ударяется о препятствие. Очевидно, что нужно каждый цикл игры (кадр) проверять пересекает ли габаритный контейнер объекта контейнер препятствия.
+Если контейнер имеет положение жестко привязанное к положению движущегося объекта, то в этом случае зафиксированное пересечение означает, что объект уже "вошел" в препятствие, а подразумевается, что объект должен остановится уперевшись в него.
+Т.е. необходимо, чтобы габаритный контейнер двигался с упреждением коллизии, т.е. надо помещать его впереди двигающегося объекта.
+В этом случае зафиксировав пересечение, мы можем установить положение объекта перед препятствием и при этом визуально не будет никакого вхождения внутрь препятствия.
+Именно это и реализуется в указанной выше части кода: мы задаем положение контейнера со смещением "вперед", соответствующем смещению объекта за время между циклами.</p>
+<p><img alt="габаритный контейнер для подвижного объекта" src="http://blog.rndspell.com/images/bounds_update.gif" title="Bounds для подвижного объекта" /></p>
+<p><em>рис.2 Движение объекта и его габаритного контейнера</em></p>
+<p>На рис.2 можно наблюдать "упреждающее" движение габаритного контейнера, который обозначен синим квардратом.</p>
+<p>Теперь введем систему коллизий.</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">CollisionSystem</span> <span class="kd">extends</span> <span class="n">EntitySystem</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">ImmutableIntMap</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">movedEntities</span><span class="o">;</span>
+    <span class="c1">//двигающиеся объекты, участвующие в системе коллизий</span>
+    <span class="kd">private</span> <span class="n">ImmutableIntMap</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">entities</span><span class="o">;</span>
+    <span class="c1">//все объекты, участвующие в системе коллизий</span>
+
+    <span class="n">BoundsComponent</span> <span class="n">bounds</span><span class="o">;</span>
+    <span class="n">PositionComponent</span> <span class="n">position</span><span class="o">;</span>
+    <span class="n">MovementComponent</span> <span class="n">movement</span><span class="o">;</span>
+    <span class="n">BoundsComponent</span> <span class="n">oBounds</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addedToEngine</span><span class="o">(</span><span class="n">Engine</span> <span class="n">engine</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">movedEntities</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="na">getEntitiesFor</span><span class="o">(</span><span class="n">Family</span><span class="o">.</span><span class="na">getFamilyFor</span><span class="o">(</span><span class="n">BoundsComponent</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">PositionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">));</span>
+        <span class="n">entities</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="na">getEntitiesFor</span><span class="o">(</span><span class="n">Family</span><span class="o">.</span><span class="na">getFamilyFor</span><span class="o">(</span><span class="n">BoundsComponent</span><span class="o">.</span><span class="na">class</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="kt">float</span> <span class="n">deltaTime</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="k">for</span><span class="o">(</span><span class="n">Entity</span> <span class="nl">entity:</span> <span class="n">movedEntities</span><span class="o">.</span><span class="na">values</span><span class="o">()){</span>
+            <span class="n">bounds</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">BoundsComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">PositionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+            <span class="n">movement</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+            <span class="k">for</span> <span class="o">(</span><span class="n">Entity</span> <span class="nl">otherEntity:</span> <span class="n">entities</span><span class="o">.</span><span class="na">values</span><span class="o">())</span> <span class="o">{</span>
+                <span class="n">oBounds</span> <span class="o">=</span> <span class="n">otherEntity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">BoundsComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(!</span><span class="n">otherEntity</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">entity</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">oBounds</span><span class="o">.</span><span class="na">isPassable</span><span class="o">())</span> <span class="o">{</span>
+                    <span class="c1">//Y COLLISION</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">+</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">&lt;</span> <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="k">if</span> <span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">overlaps</span><span class="o">(</span><span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()))</span> <span class="o">{</span>
+                            <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">+</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">;</span>
+                            <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                            <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setY</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">);</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">&gt;</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">+</span> <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="k">if</span> <span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">overlaps</span><span class="o">(</span><span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()))</span> <span class="o">{</span>
+                            <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">;</span>
+                            <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                            <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setY</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">);</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span>
+                    <span class="c1">//X COLLISION</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">x</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getX</span><span class="o">()</span> <span class="o">+</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getWidth</span><span class="o">()</span> <span class="o">&lt;</span> <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="k">if</span> <span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">overlaps</span><span class="o">(</span><span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()))</span> <span class="o">{</span>
+                            <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getX</span><span class="o">()</span> <span class="o">+</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getWidth</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span><span class="o">;</span>
+                            <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                            <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setX</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span><span class="o">);</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getX</span><span class="o">()</span> <span class="o">&gt;</span> <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getWidth</span><span class="o">()</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="k">if</span> <span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">overlaps</span><span class="o">(</span><span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()))</span> <span class="o">{</span>
+                            <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getX</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getWidth</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span><span class="o">;</span>
+                            <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                            <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setX</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span><span class="o">);</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>В этой системе мы формируем два списка объектов: один из подвижных объектов, второй из всех объектов, имеющих компонент <em>BoundsComponent</em>.
+И начинаем перебирать все подвижные объекты и проверять пересечение со всеми объектами, за исключением пересечения с собой.
+Условно разделим проверку коллизии в четырех направлениях движения.
+По оси Y:</p>
+<div class="highlight"><pre><span class="c1">//oBounds компонент BoundsComponent объекта, с которым проверяется столкновение</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">+</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">&lt;</span> <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">//случай, когда скорость объекта имеет y компоненту меньшую нуля, а так же проверяется находится ли объект ниже движущегося объекта и возможно ли пройти через объект</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">overlaps</span><span class="o">(</span><span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()))</span> <span class="o">{</span>
+        <span class="c1">//проверка пересечения габаритных контейнеров</span>
+        <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">+</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">;</span>
+        <span class="c1">//в положительном случае устанавливаем положение движущегося объекта сверху вплотную к объекту коллизии</span>
+        <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="c1">//обнуляем Y компонент скорости</span>
+        <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setY</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">);</span>
+        <span class="c1">//и так же установим положение габаритного контейнера без учета &quot;упреждающего&quot; движения</span>
+    <span class="o">}</span>
+<span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">&gt;</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">+</span> <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">//аналогично в случае положительной Y компоненте скорости движения объекта</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">overlaps</span><span class="o">(</span><span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()))</span> <span class="o">{</span>
+        <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">;</span>
+        <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setY</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>и по оси X действуем аналогично.</p>
+<p>Работу системы коллизий можно посмотреть ниже</p>
+<p><img alt="проверка работы системы коллизий" src="http://blog.rndspell.com/images/collision_test.gif" title="Проверка работы системы коллизий" /></p>
+<p><em>рис.3 Работа системы коллизий</em></p>
+<h3>События, сигналы и слушатели</h3>
+<p>В компонентной системе сущностей системы функционируют независимо друг от друга, но иногда необходимо, чтобы системы могли взаимодействовать между собой.
+В этом случае необходимо иметь возможность системам отправлять и принимать сигналы событий. Во фреймворке Ashley имеется такая возможность.</p>
+<p>Классы <em>Signal</em> и <em>Listener</em> позволяют посылать сигнал об определенных собитиях и принимать их, выполняя при этом необходимые действия.</p>
+<p>Для начала напишем класс <em>CollisionEvent</em> для описания события коллизии объектов:</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">CollisionEvent</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="n">Array</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">entities</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Array</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;();</span>
+
+    <span class="kd">public</span> <span class="nf">CollisionEvent</span><span class="o">(</span><span class="n">Entity</span><span class="o">[]</span> <span class="n">entities</span><span class="o">){</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">entities</span><span class="o">.</span><span class="na">addAll</span><span class="o">(</span><span class="n">entities</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</pre></div>
+
+
+<p>В событии просто имеется список объектов (2 и более), которые столкнулись между собой.</p>
+<p>Теперь нам необходим менеджер, откуда будут доступны все слушатели (listeners) всех систем, которые будут взаимодействовать посредством сигналов.</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ListenerManager</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">ListenerManager</span> <span class="n">instance</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">ListenerManager</span> <span class="nf">getInstance</span><span class="o">(){</span>
+        <span class="k">if</span><span class="o">(</span><span class="kc">null</span> <span class="o">==</span> <span class="n">instance</span><span class="o">){</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ListenerManager</span><span class="o">();</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="n">ArrayMap</span><span class="o">&lt;</span><span class="n">Class</span><span class="o">&lt;?&gt;,</span> <span class="n">Array</span><span class="o">&lt;</span><span class="n">Listener</span><span class="o">&gt;&gt;</span> <span class="n">listeners</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayMap</span><span class="o">&lt;</span><span class="n">Class</span><span class="o">&lt;?&gt;,</span> <span class="n">Array</span><span class="o">&lt;</span><span class="n">Listener</span><span class="o">&gt;&gt;();</span>
+    <span class="c1">//карта слушателей по типам событий</span>
+
+    <span class="kd">public</span> <span class="nf">ListenerManager</span><span class="o">(){</span>
+        <span class="n">listeners</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">CollisionEvent</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="k">new</span> <span class="n">Array</span><span class="o">&lt;</span><span class="n">Listener</span><span class="o">&gt;());</span>
+        <span class="c1">//занисим все доступные типы событий, пока только событие коллизий</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</pre></div>
+
+
+<p>В этот менеджер системы, принимающие сигналы, будут добавлять своих слушателей с определенной логикой.
+При этом логика обработки сигнала слушателем системы трения <em>FrictionSystem</em> записывается так:</p>
+<div class="highlight"><pre><span class="n">Listener</span><span class="o">&lt;</span><span class="n">CollisionEvent</span><span class="o">&gt;</span> <span class="n">listener</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Listener</span><span class="o">&lt;</span><span class="n">CollisionEvent</span><span class="o">&gt;()</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">receive</span><span class="o">(</span><span class="n">Signal</span><span class="o">&lt;</span><span class="n">CollisionEvent</span><span class="o">&gt;</span> <span class="n">signal</span><span class="o">,</span> <span class="n">CollisionEvent</span> <span class="n">collisionEvent</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">collidedEntities</span> <span class="o">=</span> <span class="n">collisionEvent</span><span class="o">.</span><span class="na">getEntities</span><span class="o">();</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">Entity</span> <span class="nl">entity:</span> <span class="n">collidedEntities</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">entity</span><span class="o">.</span><span class="na">hasComponent</span><span class="o">(</span><span class="n">FrictionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">))</span> <span class="o">{</span>
+                <span class="n">frictionValue</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">FrictionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">getFrictionValue</span><span class="o">();</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">};</span>
+</pre></div>
+
+
+<p>Т.е. при приеме сигнала типа <em>CollisionEvent</em> и события <em>CollisionEvent collisionEvent</em> получаем из события список объектов коллизии, после чего производим необходимые действия.</p>
+<p>Для обработки сигналов слушателями необходимо в системах, посылающих сигналы добавить целевые слушатели:</p>
+<div class="highlight"><pre><span class="n">Signal</span><span class="o">&lt;?&gt;</span> <span class="n">signal</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Signal</span><span class="o">&lt;?&gt;();</span>
+<span class="k">for</span> <span class="o">(</span><span class="n">Listener</span> <span class="nl">listener:</span> <span class="n">ListenerManager</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">getListeners</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="n">Class</span><span class="o">&lt;?&gt;))</span> <span class="o">{</span>
+    <span class="n">signal</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">listener</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<h3>Трение</h3>
+<p>На текущий момент двигающийся объект не испытывает на себе сил, тормозящих его движение, поэтому на поверхности, при прекращении действия ускорения, он двигается с постоянной скоростью по инерции.
+Нам же необходимо, чтобы на поверхности при нулевом векторе ускорения, он начинал снижать скорость. Поэтому необходимов ввести силу трения, но естественно в максимально упрощенном и условном виде.</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">FrictionComponent</span> <span class="kd">extends</span> <span class="n">Component</span> <span class="kd">implements</span> <span class="n">Json</span><span class="o">.</span><span class="na">Serializable</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kt">float</span> <span class="n">frictionValue</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">FrictionComponent</span><span class="o">(</span><span class="kt">float</span> <span class="n">frictionValue</span><span class="o">){</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">frictionValue</span> <span class="o">=</span> <span class="n">frictionValue</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">(</span><span class="n">Json</span> <span class="n">json</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">read</span><span class="o">(</span><span class="n">Json</span> <span class="n">json</span><span class="o">,</span> <span class="n">JsonValue</span> <span class="n">jsonData</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">json</span><span class="o">.</span><span class="na">readField</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="s">&quot;frictionValue&quot;</span><span class="o">,</span> <span class="n">jsonData</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Вот такой компонент будут иметь объекты поверхности, на которых будут тормозить персонажи. <em>frictionValue</em> коэффициент трения, можно будет задавать различные коэффициенты для разных типов поверхности (лед, песок, камень и т.д.)</p>
+<p>Сама система трения будет выглядеть вот так:</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">FrictionSystem</span> <span class="kd">extends</span> <span class="n">EntitySystem</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">ImmutableIntMap</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">entities</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">Listener</span><span class="o">&lt;</span><span class="n">CollisionEvent</span><span class="o">&gt;</span> <span class="n">listener</span><span class="o">;</span>
+    <span class="c1">//слушатель сигналов</span>
+
+    <span class="kd">private</span> <span class="n">Array</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">collidedEntities</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Array</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;();</span>
+
+    <span class="kd">private</span> <span class="kt">float</span> <span class="n">frictionValue</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">FrictionSystem</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">();</span>
+        <span class="n">listener</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Listener</span><span class="o">&lt;</span><span class="n">CollisionEvent</span><span class="o">&gt;()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">receive</span><span class="o">(</span><span class="n">Signal</span><span class="o">&lt;</span><span class="n">CollisionEvent</span><span class="o">&gt;</span> <span class="n">signal</span><span class="o">,</span> <span class="n">CollisionEvent</span> <span class="n">collisionEvent</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">collidedEntities</span> <span class="o">=</span> <span class="n">collisionEvent</span><span class="o">.</span><span class="na">getEntities</span><span class="o">();</span>
+                <span class="k">for</span> <span class="o">(</span><span class="n">Entity</span> <span class="nl">entity:</span> <span class="n">collidedEntities</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">entity</span><span class="o">.</span><span class="na">hasComponent</span><span class="o">(</span><span class="n">FrictionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">))</span> <span class="o">{</span>
+                        <span class="n">frictionValue</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">FrictionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">getFrictionValue</span><span class="o">();</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">};</span>
+        <span class="n">ListenerManager</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">getListeners</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="n">CollisionEvent</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">add</span><span class="o">(</span><span class="n">listener</span><span class="o">);</span>
+        <span class="c1">//добавляем слушателя в менеджер ListenerManager</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addedToEngine</span><span class="o">(</span><span class="n">Engine</span> <span class="n">engine</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">entities</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="na">getEntitiesFor</span><span class="o">(</span><span class="n">Family</span><span class="o">.</span><span class="na">getFamilyFor</span><span class="o">(</span><span class="n">FrictionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="kt">float</span> <span class="n">deltaTime</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">MovementComponent</span> <span class="n">movement</span><span class="o">;</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">Entity</span> <span class="nl">entity:</span> <span class="n">collidedEntities</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">entity</span><span class="o">.</span><span class="na">hasComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">))</span> <span class="o">{</span>
+                <span class="n">movement</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+                <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">add</span><span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">cpy</span><span class="o">().</span><span class="na">nor</span><span class="o">().</span><span class="na">scl</span><span class="o">(-</span><span class="n">frictionValue</span> <span class="o">*</span> <span class="n">deltaTime</span><span class="o">));</span>
+                <span class="c1">//для объектов из списка события коллизии, которые имеют компонент движения,</span>
+                <span class="c1">//их скорости добавляем вектор, противоположный движению и величиной равной коэффициенту трения</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="n">collidedEntities</span><span class="o">.</span><span class="na">clear</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Теперь необходимо добавить в систему <em>CollisionSystem</em> отправку сигналов:</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">CollisionSystem</span> <span class="kd">extends</span> <span class="n">EntitySystem</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">ImmutableIntMap</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">movedEntities</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">ImmutableIntMap</span><span class="o">&lt;</span><span class="n">Entity</span><span class="o">&gt;</span> <span class="n">entities</span><span class="o">;</span>
+
+    <span class="n">BoundsComponent</span> <span class="n">bounds</span><span class="o">;</span>
+    <span class="n">PositionComponent</span> <span class="n">position</span><span class="o">;</span>
+    <span class="n">MovementComponent</span> <span class="n">movement</span><span class="o">;</span>
+    <span class="n">BoundsComponent</span> <span class="n">oBounds</span><span class="o">;</span>
+
+    <span class="n">Signal</span><span class="o">&lt;</span><span class="n">CollisionEvent</span><span class="o">&gt;</span> <span class="n">signal</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Signal</span><span class="o">&lt;</span><span class="n">CollisionEvent</span><span class="o">&gt;();</span>
+    <span class="c1">//это сигнал, который мы будем формировать и отправлять при событии столкновения</span>
+
+    <span class="kd">public</span> <span class="nf">CollisionSystem</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">();</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">Listener</span> <span class="nl">listener:</span> <span class="n">ListenerManager</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">getListeners</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="n">CollisionEvent</span><span class="o">.</span><span class="na">class</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">signal</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">listener</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="c1">//указываем слушателей из менеджера, принимающие сигнал такого типа</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addedToEngine</span><span class="o">(</span><span class="n">Engine</span> <span class="n">engine</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">movedEntities</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="na">getEntitiesFor</span><span class="o">(</span><span class="n">Family</span><span class="o">.</span><span class="na">getFamilyFor</span><span class="o">(</span><span class="n">BoundsComponent</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">PositionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">));</span>
+        <span class="n">entities</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="na">getEntitiesFor</span><span class="o">(</span><span class="n">Family</span><span class="o">.</span><span class="na">getFamilyFor</span><span class="o">(</span><span class="n">BoundsComponent</span><span class="o">.</span><span class="na">class</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">update</span><span class="o">(</span><span class="kt">float</span> <span class="n">deltaTime</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="k">for</span><span class="o">(</span><span class="n">Entity</span> <span class="nl">entity:</span> <span class="n">movedEntities</span><span class="o">.</span><span class="na">values</span><span class="o">()){</span>
+            <span class="n">bounds</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">BoundsComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">PositionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+            <span class="n">movement</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+            <span class="k">for</span> <span class="o">(</span><span class="n">Entity</span> <span class="nl">otherEntity:</span> <span class="n">entities</span><span class="o">.</span><span class="na">values</span><span class="o">())</span> <span class="o">{</span>
+                <span class="n">oBounds</span> <span class="o">=</span> <span class="n">otherEntity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">BoundsComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(!</span><span class="n">otherEntity</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">entity</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">oBounds</span><span class="o">.</span><span class="na">isPassable</span><span class="o">())</span> <span class="o">{</span>
+                    <span class="c1">//Y COLLISION</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">+</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">&lt;</span> <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="k">if</span> <span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">overlaps</span><span class="o">(</span><span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()))</span> <span class="o">{</span>
+                            <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">+</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">;</span>
+                            <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                            <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setY</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">);</span>
+                            <span class="n">signal</span><span class="o">.</span><span class="na">dispatch</span><span class="o">(</span><span class="k">new</span> <span class="n">CollisionEvent</span><span class="o">(</span><span class="k">new</span> <span class="n">Entity</span><span class="o">[]</span> <span class="o">{</span><span class="n">entity</span><span class="o">,</span> <span class="n">otherEntity</span><span class="o">}));</span>
+                            <span class="c1">//отправляем сигнал с событием коллизии двух объектов</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">&gt;</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">+</span> <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="k">if</span> <span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">overlaps</span><span class="o">(</span><span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()))</span> <span class="o">{</span>
+                            <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getY</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getHeight</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">;</span>
+                            <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">y</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                            <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setY</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">y</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">y</span><span class="o">);</span>
+                            <span class="n">signal</span><span class="o">.</span><span class="na">dispatch</span><span class="o">(</span><span class="k">new</span> <span class="n">CollisionEvent</span><span class="o">(</span><span class="k">new</span> <span class="n">Entity</span><span class="o">[]</span> <span class="o">{</span><span class="n">entity</span><span class="o">,</span> <span class="n">otherEntity</span><span class="o">}));</span>
+
+                        <span class="o">}</span>
+                    <span class="o">}</span>
+                    <span class="c1">//X COLLISION</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">x</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getX</span><span class="o">()</span> <span class="o">+</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getWidth</span><span class="o">()</span> <span class="o">&lt;</span> <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="k">if</span> <span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">overlaps</span><span class="o">(</span><span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()))</span> <span class="o">{</span>
+                            <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getX</span><span class="o">()</span> <span class="o">+</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getWidth</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span><span class="o">;</span>
+                            <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                            <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setX</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span><span class="o">);</span>
+                            <span class="n">signal</span><span class="o">.</span><span class="na">dispatch</span><span class="o">(</span><span class="k">new</span> <span class="n">CollisionEvent</span><span class="o">(</span><span class="k">new</span> <span class="n">Entity</span><span class="o">[]</span> <span class="o">{</span><span class="n">entity</span><span class="o">,</span> <span class="n">otherEntity</span><span class="o">}));</span>
+
+                        <span class="o">}</span>
+                    <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getX</span><span class="o">()</span> <span class="o">&gt;</span> <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getWidth</span><span class="o">()</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="k">if</span> <span class="o">(</span><span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">overlaps</span><span class="o">(</span><span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">()))</span> <span class="o">{</span>
+                            <span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="n">oBounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getX</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">getWidth</span><span class="o">()</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span><span class="o">;</span>
+                            <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">x</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                            <span class="n">bounds</span><span class="o">.</span><span class="na">getBounds</span><span class="o">().</span><span class="na">setX</span><span class="o">(</span><span class="n">position</span><span class="o">.</span><span class="na">getPosition</span><span class="o">().</span><span class="na">x</span> <span class="o">+</span> <span class="n">bounds</span><span class="o">.</span><span class="na">getBoundsOffset</span><span class="o">().</span><span class="na">x</span><span class="o">);</span>
+                            <span class="n">signal</span><span class="o">.</span><span class="na">dispatch</span><span class="o">(</span><span class="k">new</span> <span class="n">CollisionEvent</span><span class="o">(</span><span class="k">new</span> <span class="n">Entity</span><span class="o">[]</span> <span class="o">{</span><span class="n">entity</span><span class="o">,</span> <span class="n">otherEntity</span><span class="o">}));</span>
+
+                        <span class="o">}</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Честно говоря, я был удивлен, когда написанная выше система трения заработала так, как я ожидал.
+Неизвестно, как она поведет себя в дальнейшем, т.к. она явно требует доработки в будущем...</p>
+<p>Для полноты картины не хватает только гравитации.</p>
+<h3>Гравитация</h3>
+<p>Гравитация действует в одном нарпавлении и с постоянной силой, ввести ее в наш игровой мир не представляет никаких сложностей.</p>
+<p>Опять же по накатанной необходимы две вещи: компонент и система.</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">GravityComponent</span> <span class="kd">extends</span> <span class="n">Component</span> <span class="kd">implements</span> <span class="n">Json</span><span class="o">.</span><span class="na">Serializable</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">Vector2</span> <span class="n">gravity</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Vector2</span><span class="o">();</span>
+    <span class="c1">//вектор, определяющий направление и величину гравитации</span>
+
+    <span class="kd">public</span> <span class="nf">GravityComponent</span><span class="o">(</span><span class="n">Vector2</span> <span class="n">gravity</span><span class="o">){</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">gravity</span> <span class="o">=</span> <span class="n">gravity</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">(</span><span class="n">Json</span> <span class="n">json</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">read</span><span class="o">(</span><span class="n">Json</span> <span class="n">json</span><span class="o">,</span> <span class="n">JsonValue</span> <span class="n">jsonData</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">json</span><span class="o">.</span><span class="na">readField</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="s">&quot;gravity&quot;</span><span class="o">,</span> <span class="n">jsonData</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">GravitySystem</span> <span class="kd">extends</span> <span class="n">IteratingSystem</span> <span class="o">{</span>
+
+    <span class="n">GravityComponent</span> <span class="n">gravity</span><span class="o">;</span>
+    <span class="n">MovementComponent</span> <span class="n">movement</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">GravitySystem</span><span class="o">(){</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">Family</span><span class="o">.</span><span class="na">getFamilyFor</span><span class="o">(</span><span class="n">GravityComponent</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">processEntity</span><span class="o">(</span><span class="n">Entity</span> <span class="n">entity</span><span class="o">,</span> <span class="kt">float</span> <span class="n">deltaTime</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">gravity</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">GravityComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="n">movement</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">add</span><span class="o">(</span><span class="n">gravity</span><span class="o">.</span><span class="na">getGravity</span><span class="o">().</span><span class="na">cpy</span><span class="o">().</span><span class="na">scl</span><span class="o">(</span><span class="n">deltaTime</span><span class="o">));</span>
+        <span class="c1">//к вектору скорости добавляем вектор гравитации, скалярно умноженный на время одного цикла deltaTime</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Вот и все, регистрируем нашу систему и добавляем компонент к объектам в <em>GameScreen</em> (опустим лишный код):</p>
+<div class="highlight"><pre><span class="nd">@Override</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">show</span><span class="o">()</span> <span class="o">{</span>
+    <span class="o">...</span>
+
+    <span class="n">FrictionSystem</span> <span class="n">frictionSystem</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FrictionSystem</span><span class="o">();</span>
+    <span class="n">CollisionSystem</span> <span class="n">collisionSystem</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CollisionSystem</span><span class="o">();</span>
+    <span class="c1">//инициализируем системы трения и коллизий, причем важен порядок,</span>
+    <span class="c1">//поскольку система трения регистрирует своего слушателя в менеджере,</span>
+    <span class="c1">//а затем система коллизий инициализирует сигнал и привязывает его к слушателям из менеджера</span>
+
+    <span class="o">...</span>
+
+    <span class="n">engine</span><span class="o">.</span><span class="na">addSystem</span><span class="o">(</span><span class="k">new</span> <span class="n">GravitySystem</span><span class="o">());</span>
+    <span class="c1">//добавляем систему гравитации</span>
+    <span class="n">engine</span><span class="o">.</span><span class="na">addSystem</span><span class="o">(</span><span class="n">frictionSystem</span><span class="o">);</span>
+    <span class="n">engine</span><span class="o">.</span><span class="na">addSystem</span><span class="o">(</span><span class="n">collisionSystem</span><span class="o">);</span>
+
+    <span class="o">...</span>
+
+    <span class="n">player</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">GravityComponent</span><span class="o">(</span><span class="k">new</span> <span class="n">Vector2</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="o">-</span><span class="mi">128</span><span class="n">f</span><span class="o">)));</span>
+    <span class="c1">//добавляем компонент гравитации</span>
+
+    <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">i</span><span class="o">&lt;</span> <span class="mi">5</span><span class="o">;</span> <span class="n">i</span><span class="o">++){</span>
+
+        <span class="o">...</span>
+
+        <span class="n">entity</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">FrictionComponent</span><span class="o">(</span><span class="mi">128</span><span class="o">));</span>
+        <span class="c1">//добавляем компонтет трения объектам поверхности</span>
+
+    <span class="o">}</span>
+    <span class="o">...</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p><img alt="результат без камеры" src="http://blog.rndspell.com/images/basic_systems_test.gif" title="Проверка работы основных систем" /></p>
+<p><em>рис.5 Результат слаженной работы нескольких систем</em></p>
+<p>Пожалуй стоит прибить камеру к главному персонажу...</p>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">CameraComponent</span> <span class="kd">extends</span> <span class="n">Component</span> <span class="kd">implements</span> <span class="n">Json</span><span class="o">.</span><span class="na">Serializable</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">locked</span><span class="o">;</span>
+    <span class="c1">//прикреплена ли камера к родительскому объекту</span>
+
+    <span class="kd">public</span> <span class="nf">CameraComponent</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">locked</span><span class="o">){</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">locked</span> <span class="o">=</span> <span class="n">locked</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">(</span><span class="n">Json</span> <span class="n">json</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">read</span><span class="o">(</span><span class="n">Json</span> <span class="n">json</span><span class="o">,</span> <span class="n">JsonValue</span> <span class="n">jsonData</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">json</span><span class="o">.</span><span class="na">readField</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="s">&quot;locked&quot;</span><span class="o">,</span> <span class="n">jsonData</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">CameraSystem</span> <span class="kd">extends</span> <span class="n">IteratingSystem</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">OrthographicCamera</span> <span class="n">camera</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">CameraComponent</span> <span class="n">cameraComponent</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">CameraSystem</span> <span class="o">(</span><span class="n">OrthographicCamera</span> <span class="n">camera</span><span class="o">){</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">Family</span><span class="o">.</span><span class="na">getFamilyFor</span><span class="o">(</span><span class="n">CameraComponent</span><span class="o">.</span><span class="na">class</span><span class="o">));</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">camera</span> <span class="o">=</span> <span class="n">camera</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">processEntity</span><span class="o">(</span><span class="n">Entity</span> <span class="n">entity</span><span class="o">,</span> <span class="kt">float</span> <span class="n">deltaTime</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">cameraComponent</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">CameraComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">cameraComponent</span><span class="o">.</span><span class="na">isLocked</span><span class="o">()</span> <span class="o">&amp;&amp;</span> <span class="n">entity</span><span class="o">.</span><span class="na">hasComponent</span><span class="o">(</span><span class="n">PositionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">camera</span><span class="o">.</span><span class="na">position</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">PositionComponent</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">getPosition</span><span class="o">(),</span> <span class="mi">0</span><span class="o">);</span>
+            <span class="c1">//если компонент камеры объекта указывает, что камера должна быть закреплена,</span>
+            <span class="c1">//положение этой камеры устанавливаем равным положению объекта</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Далее новую систему и компоненты регистрируем и добавляем в <em>GameScreen</em>.</p>
+<p>Подобная легкость добавления различных вещей в игре монолитной и не разделенной на составные части просто недостижима (хотя я могу быть и не прав).</p>
+<p><img alt="Конечный результат с камерой" src="http://blog.rndspell.com/images/basic_systems_camera.gif" title="Проверка работы основных систем с камерой" /></p>
+<p><em>рис.6 Камера следует за персонажем</em></p>
+<p>Как всегда конечный результат по данному посту можно найти в моем репозитории:</p>
+<div class="highlight"><pre><span class="n">git</span> <span class="n">clone</span> <span class="o">-</span><span class="n">b</span> <span class="n">part4</span> <span class="o">--</span><span class="n">single</span><span class="o">-</span><span class="n">branch</span> <span class="n">git</span><span class="err">@</span><span class="n">github</span><span class="p">.</span><span class="n">com</span><span class="o">:</span><span class="n">rndSPELL</span><span class="o">/</span><span class="n">libGDXGame</span><span class="p">.</span><span class="n">git</span>
+</pre></div>
+
+
+<p>Продолжение следует...</p>
+            </div>
+            <!-- /.entry-content -->
+    <hr/>
+    <section class="comments" id="comments">
+        <h2>Комментарии</h2>
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+            var disqus_shortname = 'rndspellblog'; // required: replace example with your forum shortname
+
+                    var disqus_identifier = 'libgdx-game-from-scratch-part4';
+                var disqus_url = 'http://blog.rndspell.com/posts/2014/08/libgdx-game-from-scratch-part4/';
+
+            var disqus_config = function () {
+                this.language = "ru";
+            };
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function () {
+                var dsq = document.createElement('script');
+                dsq.type = 'text/javascript';
+                dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by
+            Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    </section>
+        </article>
+    </section>
+
+        </div>
+        <div class="col-sm-3 well well-sm" id="sidebar">
+
+<aside>
+    <section>
+        <ul class="list-group list-group-flush">
+                <li class="list-group-item"><h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Соцсети</span></h4>
+                  <ul class="list-group" id="social">
+                    <li class="list-group-item"><a href="https://twitter.com/rndSPELL"><i class="fa fa-twitter-square fa-lg"></i> twitter</a></li>
+                  </ul>
+                </li>
+
+
+
+                <li class="list-group-item"><a href="http://blog.rndspell.com/"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Тэги</span></h4></a>
+                    <ul class="list-group " id="tags">
+                        <li class="list-group-item tag-1">
+                            <a href="http://blog.rndspell.com/tag/libgdx/">
+                                libGDX
+                            </a>
+                        </li>
+                        <li class="list-group-item tag-1">
+                            <a href="http://blog.rndspell.com/tag/gamedev/">
+                                gamedev
+                            </a>
+                        </li>
+                        <li class="list-group-item tag-2">
+                            <a href="http://blog.rndspell.com/tag/ecs/">
+                                ECS
+                            </a>
+                        </li>
+                    </ul>
+                </li>    
+
+    <li class="list-group-item"><h4><i class="fa fa-github fa-lg"></i><span class="icon-label">GitHub</span></h4>
+        <div id="gh_repos">
+            <p class="list-group-item">Status updating...</p>
+        </div>
+    </li>
+    <li class="list-group-item"><h4><i class="fa fa-external-link-square fa-lg"></i><span class="icon-label">Ссылки</span></h4>
+      <ul class="list-group" id="links">
+        <li class="list-group-item">
+            <a href="http://getpelican.com/" target="_blank">
+                Pelican
+            </a>
+        </li>
+        <li class="list-group-item">
+            <a href="http://python.org/" target="_blank">
+                Python.org
+            </a>
+        </li>
+        <li class="list-group-item">
+            <a href="http://jinja.pocoo.org/" target="_blank">
+                Jinja2
+            </a>
+        </li>
+      </ul>
+    </li>
+
+        </ul>
+    </section>
+
+</aside>        </div>
+    </div>
+</div>
+<footer>
+   <div class="container">
+      <hr>
+      <div class="row">
+         <div class="col-xs-10">&copy; 2014 Bserg
+            &middot; Powered by <a href="https://github.com/DandyDev/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
+            <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
+            <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>         </div>
+         <div class="col-xs-2"><p class="pull-right"><i class="fa fa-arrow-up"></i> <a href="#">Back to top</a></p></div>
+      </div>
+   </div>
+</footer>
+<script src="http://blog.rndspell.com/theme/js/jquery.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="http://blog.rndspell.com/theme/js/bootstrap.min.js"></script>
+
+<!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+<script src="http://blog.rndspell.com/theme/js/respond.min.js"></script>
+
+    <!-- GitHub JS -->
+    <script type="text/javascript">
+        $(document).ready(function () {
+            if (!window.jXHR) {
+                var jxhr = document.createElement('script');
+                jxhr.type = 'text/javascript';
+                jxhr.src = 'http://blog.rndspell.com/theme/js/jXHR.js';
+                var s = document.getElementsByTagName('script')[0];
+                s.parentNode.insertBefore(jxhr, s);
+            }
+
+            github.showRepos({
+                user: 'rndSPELL',
+                count: 5,
+                skip_forks: false,
+                target: '#gh_repos'
+            });
+        });
+    </script>
+    <script src="http://blog.rndspell.com/theme/js/github.js" type="text/javascript"></script>
+    <!-- End GitHub JS Code -->
+    <!-- Disqus -->
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rndspellblog'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function () {
+            var s = document.createElement('script');
+            s.async = true;
+            s.type = 'text/javascript';
+            s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+            (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+        }());
+    </script>
+    <!-- End Disqus Code -->
+    <!-- Google Analytics -->
+    <script type="text/javascript">
+
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-52846142-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function () {
+            var ga = document.createElement('script');
+            ga.type = 'text/javascript';
+            ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+    <!-- End Google Analytics Code -->
+</body>
+</html>
