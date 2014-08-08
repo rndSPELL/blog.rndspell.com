@@ -1,5 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>rndSPELL | Blog</title><link href="http://blog.rndspell.com/" rel="alternate"></link><link href="http://blog.rndspell.com/feeds/all.atom.xml" rel="self"></link><id>http://blog.rndspell.com/</id><updated>2014-08-07T10:00:00+04:00</updated><entry><title>Пишем игру с нуля. LibGDX. Часть 4. Коллизии, воздействие сил на объекты. Управление.</title><link href="http://blog.rndspell.com/posts/2014/08/libgdx-game-from-scratch-part4/" rel="alternate"></link><updated>2014-08-07T10:00:00+04:00</updated><author><name>Bserg</name></author><id>tag:blog.rndspell.com,2014-08-07:posts/2014/08/libgdx-game-from-scratch-part4/</id><summary type="html">&lt;p&gt;Предыдущие статьи: &lt;a href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part1/"&gt;часть1&lt;/a&gt;, &lt;a href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part2/"&gt;часть2&lt;/a&gt;, &lt;a href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part3/"&gt;часть3&lt;/a&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>rndSPELL | Blog</title><link href="http://blog.rndspell.com/" rel="alternate"></link><link href="http://blog.rndspell.com/feeds/all.atom.xml" rel="self"></link><id>http://blog.rndspell.com/</id><updated>2014-08-08T10:20:00+04:00</updated><entry><title>Byzanz - легковесная и быстрая утилита для создани скринкастов.</title><link href="http://blog.rndspell.com/posts/2014/08/byzanz-screencast/" rel="alternate"></link><updated>2014-08-08T10:20:00+04:00</updated><author><name>Bserg</name></author><id>tag:blog.rndspell.com,2014-08-08:posts/2014/08/byzanz-screencast/</id><summary type="html">&lt;p&gt;Когда мне потребовалас программа для захвата экрана, я искал максимально простую утилиту, легкую, желательно консольную. В репозиториях ubuntu я обнаружил &lt;a href="https://github.com/GNOME/byzanz"&gt;byzanz&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Установка в ubuntu проста:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo apt-get install byzanz
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Утилита состоит из двух: это byzan-record и byzanz-playback.
+Первое это запись экрана в формате GIF, OGG, FLV и т.д. второе - конвертация результата захвата в формате .byzanz в другой доступный формат.&lt;/p&gt;
+&lt;p&gt;byzanz-record имеет следующий синтаксис:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;byzanz-record &lt;span class="o"&gt;[&lt;/span&gt;ключи&lt;span class="o"&gt;]&lt;/span&gt; путь/до/выходного/файла.&lt;span class="o"&gt;[&lt;/span&gt;gif, ogg, ogv, flv, webm, byzanz&lt;span class="o"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;расширение файла определяет формат записи.&lt;/p&gt;
+&lt;p&gt;Доступные ключи:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;-a, --audio
+      Запись аудио со стандартного устройства аудиоввода &lt;span class="o"&gt;(&lt;/span&gt;микрофона&lt;span class="o"&gt;)&lt;/span&gt;.
+
+-c, --cursor
+      Записывать курсор
+
+-d, --duration&lt;span class="o"&gt;=&lt;/span&gt;SECS
+      Длительность записи &lt;span class="o"&gt;(&lt;/span&gt;по умолчанию: 10 с&lt;span class="o"&gt;)&lt;/span&gt;
+
+-e, --exec&lt;span class="o"&gt;=&lt;/span&gt;COMMAND
+      В отличии от ключа -d длительность записи будет определяться временем выполнения команды COMMAND
+
+--delay&lt;span class="o"&gt;=&lt;/span&gt;SECS
+      Задержка старта записи &lt;span class="o"&gt;(&lt;/span&gt;по умолчанию: 1 с&lt;span class="o"&gt;)&lt;/span&gt;
+
+--display&lt;span class="o"&gt;=&lt;/span&gt;DISPLAY
+      Использовать X DISPLAY
+
+-h, --height&lt;span class="o"&gt;=&lt;/span&gt;PIXEL
+      Высота области захвата
+
+-v, --verbose
+      подробный вывод
+
+-w, --width&lt;span class="o"&gt;=&lt;/span&gt;PIXEL
+      Ширина области захвата
+
+-x, --x&lt;span class="o"&gt;=&lt;/span&gt;PIXEL
+      X координата области захвата
+
+-y, --y&lt;span class="o"&gt;=&lt;/span&gt;PIXEL
+      Y координата области захвата
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Пример использования:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;byzanz-record -c -w 300 -h 200 -x 0 -y 30 --delay&lt;span class="o"&gt;=&lt;/span&gt;5 file.gif
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Результат захвата экрана:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="пример" src="http://blog.rndspell.com/images/byzanz_test.gif" /&gt;&lt;/p&gt;</summary><category term="byzanz"></category><category term="скринкасты"></category></entry><entry><title>Пишем игру с нуля. LibGDX. Часть 4. Коллизии, воздействие сил на объекты. Управление.</title><link href="http://blog.rndspell.com/posts/2014/08/libgdx-game-from-scratch-part4/" rel="alternate"></link><updated>2014-08-07T10:00:00+04:00</updated><author><name>Bserg</name></author><id>tag:blog.rndspell.com,2014-08-07:posts/2014/08/libgdx-game-from-scratch-part4/</id><summary type="html">&lt;p&gt;Предыдущие статьи: &lt;a href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part1/"&gt;часть1&lt;/a&gt;, &lt;a href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part2/"&gt;часть2&lt;/a&gt;, &lt;a href="http://blog.rndspell.com/posts/2014/07/libgdx-game-from-scratch-part3/"&gt;часть3&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;В моей игре будет два основных режима: приключение (беготня по игровому миру) и битвы (пошаговые бои, как в большинстве японских рпг).
 В первом режиме игра будет представлять собой 2d платформер, т.е вид сбоку, управление движением кнопками на клавиатуре, а в случае мобильной версии - экранными кнопками.
 Платформер должен иметь хоть простейшую, но физику (система коллизий, гравитация и т.д.).
