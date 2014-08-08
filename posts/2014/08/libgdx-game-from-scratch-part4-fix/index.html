@@ -202,7 +202,7 @@
             <span class="c1">//производим итерацию по объектам в словаре</span>
             <span class="k">if</span> <span class="o">(</span><span class="n">entity</span><span class="o">.</span><span class="na">hasComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">))</span> <span class="o">{</span>
                 <span class="n">movement</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="na">getComponent</span><span class="o">(</span><span class="n">MovementComponent</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
-                <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">add</span><span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">cpy</span><span class="o">().</span><span class="na">nor</span><span class="o">().</span><span class="na">scl</span><span class="o">(-</span><span class="n">frictionValue</span> <span class="o">*</span> <span class="n">deltaTime</span><span class="o">));</span>
+                <span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">add</span><span class="o">(</span><span class="n">movement</span><span class="o">.</span><span class="na">getVelocity</span><span class="o">().</span><span class="na">cpy</span><span class="o">().</span><span class="na">nor</span><span class="o">().</span><span class="na">scl</span><span class="o">(-</span><span class="n">frictionMap</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">entity</span><span class="o">)</span> <span class="o">*</span> <span class="n">deltaTime</span><span class="o">));</span>
             <span class="o">}</span>
         <span class="o">}</span>
 
@@ -273,13 +273,13 @@
                 <li class="list-group-item"><a href="http://blog.rndspell.com/"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Тэги</span></h4></a>
                     <ul class="list-group " id="tags">
                         <li class="list-group-item tag-1">
-                            <a href="http://blog.rndspell.com/tag/gamedev/">
-                                gamedev
+                            <a href="http://blog.rndspell.com/tag/libgdx/">
+                                libGDX
                             </a>
                         </li>
                         <li class="list-group-item tag-1">
-                            <a href="http://blog.rndspell.com/tag/libgdx/">
-                                libGDX
+                            <a href="http://blog.rndspell.com/tag/gamedev/">
+                                gamedev
                             </a>
                         </li>
                         <li class="list-group-item tag-2">
